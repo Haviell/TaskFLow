@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Gestão de Tarefas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #e63946;
+            --academic: #7209b7;
+            --personal: #f77f00;
+            --general: #2a9d8f;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .date-display {
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 25px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .filters h3, .task-form h3 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+            color: var(--primary);
+        }
+        
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        
+        .filter-group h4 {
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-options label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .filter-options label:hover {
+            background: var(--light);
+        }
+        
+        .filter-options input {
+            margin-right: 10px;
+        }
+        
+        .task-form input, .task-form select, .task-form textarea, .task-form button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .task-form textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .task-form button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .task-form button:hover {
+            background: var(--secondary);
+        }
+        
+        .tasks-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .tasks-header h2 {
+            color: var(--primary);
+            margin-right: 15px;
+        }
+        
+        .view-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .view-options button {
+            padding: 8px 15px;
+            background: var(--light);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .view-options button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .task-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .task-card {
+            background: white;
+            border-left: 5px solid var(--general);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            transition: transform 0.3s;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .task-card.academic {
+            border-left-color: var(--academic);
+        }
+        
+        .task-card.personal {
+            border-left-color: var(--personal);
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .task-desc {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #888;
+            flex-wrap: wrap;
+        }
+        
+        .task-category {
+            padding: 3px 8px;
+            border-radius: 15px;
+            background: #eee;
+            font-size: 12px;
+        }
+        
+        .task-card.academic .task-category {
+            background: rgba(114, 9, 183, 0.1);
+            color: var(--academic);
+        }
+        
+        .task-card.personal .task-category {
+            background: rgba(247, 127, 0, 0.1);
+            color: var(--personal);
+        }
+        
+        .task-card.general .task-category {
+            background: rgba(42, 157, 143, 0.1);
+            color: var(--general);
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .task-actions button {
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: var(--light);
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .task-actions button.complete-btn:hover {
+            background: var(--success);
+            color: white;
+        }
+        
+        .task-actions button.delete-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .tasks-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .task-meta {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-tasks"></i>
+                    <span>TaskFlow</span>
+                </div>
+                <div class="date-display">
+                    <i class="far fa-calendar"></i>
+                    <span id="current-date"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="filters">
+                    <h3>Filtros</h3>
+                    
+                    <div class="filter-group">
+                        <h4>Categoria</h4>
+                        <div class="filter-options">
+                            <label>
+                                <input type="radio" name="category" value="all" checked> Todas as categorias
+                            </label>
+                            <label>
+                                <input type="radio" name="category" value="academic"> Acadêmicas
+                            </label>
+                            <label>
+                                <input type="radio" name="category" value="personal"> Pessoais
+                            </label>
+                            <label>
+                                <input type="radio" name="category" value="general"> Gerais
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h4>Período</h4>
+                        <div class="filter-options">
+                            <label>
+                                <input type="radio" name="period" value="all" checked> Todos os périodos
+                            </label>
+                            <label>
+                                <input type="radio" name="period" value="daily"> Diárias
+                            </label>
+                            <label>
+                                <input type="radio" name="period" value="weekly"> Semanais
+                            </label>
+                            <label>
+                                <input type="radio" name="period" value="monthly"> Mensais
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="task-form">
+                    <h3>Nova Tarefa</h3>
+                    <input type="text" id="task-title" placeholder="Título da tarefa">
+                    <textarea id="task-desc" placeholder="Descrição (opcional)"></textarea>
+                    
+                    <select id="task-category">
+                        <option value="general">Geral</option>
+                        <option value="academic">Acadêmica</option>
+                        <option value="personal">Pessoal</option>
+                    </select>
+                    
+                    <select id="task-period">
+                        <option value="daily">Diária</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensal</option>
+                    </select>
+                    
+                    <input type="date" id="task-due">
+                    
+                    <button id="add-task-btn">Adicionar Tarefa</button>
+                </div>
+            </div>
+            
+            <div class="tasks-container">
+                <div class="tasks-header">
+                    <h2>Suas Tarefas</h2>
+                    <div class="view-options">
+                        <button class="active" data-view="all">Todas</button>
+                        <button data-view="pending">Pendentes</button>
+                        <button data-view="completed">Concluídas</button>
+                    </div>
+                </div>
+                
+                <div class="task-list" id="task-list">
+                    <div class="empty-state">
+                        <i class="far fa-smile"></i>
+                        <h3>Nenhuma tarefa encontrada</h3>
+                        <p>Adicione uma nova tarefa ou altere os filtros</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da data atual
+        const now = new Date();
+        document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Configurar data de vencimento padrão para amanhã
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('task-due').value = tomorrow.toISOString().split('T')[0];
+        
+        // Configuração da API
+        const API_BASE = window.location.origin + '/api';
+        let tasks = [];
+        
+        // Carregar tarefas da API REAL
+        async function loadTasks() {
+            try {
+                console.log('Carregando tarefas da API...');
+                const response = await fetch(API_BASE + '/tasks');
+                
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${response.statusText}`);
+                }
+                
+                tasks = await response.json();
+                console.log('Tarefas carregadas:', tasks.length);
+                renderTasks();
+                
+            } catch (error) {
+                console.error('Erro ao carregar tarefas:', error);
+                // Fallback para dados locais
+                const storedTasks = localStorage.getItem('tasks');
+                if (storedTasks) {
+                    tasks = JSON.parse(storedTasks);
+                    renderTasks();
+                }
+            }
+        }
+        
+        // Renderizar lista de tarefas
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            const categoryFilter = document.querySelector('input[name="category"]:checked').value;
+            const periodFilter = document.querySelector('input[name="period"]:checked').value;
+            const viewFilter = document.querySelector('.view-options button.active').dataset.view;
+            
+            // Filtrar tarefas
+            let filteredTasks = tasks.filter(task => {
+                // Filtro de categoria
+                if (categoryFilter !== 'all' && task.category !== categoryFilter) return false;
+                
+                // Filtro de período
+                if (periodFilter !== 'all' && task.period !== periodFilter) return false;
+                
+                // Filtro de visualização (todas, pendentes, concluídas)
+                if (viewFilter === 'pending' && task.completed) return false;
+                if (viewFilter === 'completed' && !task.completed) return false;
+                
+                return true;
+            });
+            
+            // Limpar lista
+            taskList.innerHTML = '';
+            
+            // Verificar se há tarefas
+            if (filteredTasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="far fa-smile"></i>
+                        <h3>Nenhuma tarefa encontrada</h3>
+                        <p>Adicione uma nova tarefa ou altere os filtros</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Adicionar tarefas à lista
+            filteredTasks.forEach(task => {
+                const taskCard = document.createElement('div');
+                taskCard.classList.add('task-card', task.category);
+                if (task.completed) taskCard.classList.add('completed');
+                
+                // Formatar data
+                const dueDate = new Date(task.dueDate).toLocaleDateString('pt-BR');
+                
+                taskCard.innerHTML = `
+                    <div class="task-content">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-desc">${task.description || 'Sem descrição'}</div>
+                        <div class="task-meta">
+                            <span class="task-category">${getCategoryLabel(task.category)}</span>
+                            <span><i class="far fa-calendar"></i> ${dueDate}</span>
+                            <span><i class="far fa-clock"></i> ${getPeriodLabel(task.period)}</span>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="complete-btn" data-id="${task._id}">
+                            <i class="fas fa-${task.completed ? 'undo' : 'check'}"></i>
+                        </button>
+                        <button class="delete-btn" data-id="${task._id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                taskList.appendChild(taskCard);
+            });
+        }
+        
+        // Event delegation para botões dinâmicos
+        document.getElementById('task-list').addEventListener('click', function(event) {
+            // Botão Concluir/Desfazer
+            if (event.target.closest('.complete-btn')) {
+                const btn = event.target.closest('.complete-btn');
+                const taskId = btn.dataset.id;
+                console.log('Clicou em completar tarefa:', taskId);
+                toggleTask(taskId);
+            }
+            
+            // Botão Excluir
+            if (event.target.closest('.delete-btn')) {
+                const btn = event.target.closest('.delete-btn');
+                const taskId = btn.dataset.id;
+                console.log('Clicou em excluir tarefa:', taskId);
+                deleteTask(taskId);
+            }
+        });
+        
+        // Configurar event listeners para filtros
+        document.querySelectorAll('input[name="category"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                console.log('Filtro categoria alterado:', radio.value);
+                renderTasks();
+            });
+        });
+        
+        document.querySelectorAll('input[name="period"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                console.log('Filtro período alterado:', radio.value);
+                renderTasks();
+            });
+        });
+        
+        document.querySelectorAll('.view-options button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                console.log('Visualização alterada:', this.dataset.view);
+                document.querySelector('.view-options button.active').classList.remove('active');
+                this.classList.add('active');
+                renderTasks();
+            });
+        });
+        
+        // Obter rótulo da categoria
+        function getCategoryLabel(category) {
+            const labels = {
+                'academic': 'Acadêmica',
+                'personal': 'Pessoal',
+                'general': 'Geral'
+            };
+            return labels[category] || 'Geral';
+        }
+        
+        // Obter rótulo do período
+        function getPeriodLabel(period) {
+            const labels = {
+                'daily': 'Diária',
+                'weekly': 'Semanal',
+                'monthly': 'Mensal'
+            };
+            return labels[period] || 'Diária';
+        }
+        
+        // Adicionar nova tarefa na API
+        async function addTask() {
+            console.log('Função addTask() executada');
+            
+            const titleInput = document.getElementById('task-title');
+            const descInput = document.getElementById('task-desc');
+            const categorySelect = document.getElementById('task-category');
+            const periodSelect = document.getElementById('task-period');
+            const dueInput = document.getElementById('task-due');
+            
+            const title = titleInput.value.trim();
+            const description = descInput.value.trim();
+            const category = categorySelect.value;
+            const period = periodSelect.value;
+            const dueDate = dueInput.value;
+            
+            console.log('Dados do formulário:', { title, description, category, period, dueDate });
+            
+            if (!title) {
+                alert('Por favor, insira um título para a tarefa.');
+                return;
+            }
+            
+            try {
+                console.log('Enviando para API...');
+                
+                const response = await fetch(API_BASE + '/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        category,
+                        period,
+                        dueDate,
+                        completed: false
+                    })
+                });
+                
+                console.log('Resposta da API:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro ${response.status}: ${errorText}`);
+                }
+                
+                const newTask = await response.json();
+                console.log('Tarefa criada com sucesso:', newTask);
+                
+                // Limpar formulário
+                titleInput.value = '';
+                descInput.value = '';
+                categorySelect.value = 'general';
+                periodSelect.value = 'daily';
+                
+                // Definir data de vencimento padrão para amanhã
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                dueInput.value = tomorrow.toISOString().split('T')[0];
+                
+                // Recarregar tarefas da API
+                loadTasks();
+                
+                alert('Tarefa adicionada com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro detalhado:', error);
+                alert('Erro ao adicionar tarefa: ' + error.message);
+            }
+        }
+        
+        // Alternar estado de conclusão da tarefa na API - VERSÃO CORRIGIDA
+        async function toggleTask(id) {
+            try {
+                console.log('📌 Tentando alternar tarefa ID:', id);
+                
+                // Encontrar a tarefa
+                const task = tasks.find(t => t._id === id);
+                
+                if (!task) {
+                    console.error('❌ Tarefa não encontrada. IDs disponíveis:', tasks.map(t => t._id));
+                    alert('Tarefa não encontrada!');
+                    return;
+                }
+                
+                console.log('✅ Tarefa encontrada:', task.title);
+                console.log('🔄 Alterando completed de:', task.completed, 'para:', !task.completed);
+                
+                const response = await fetch(`${API_BASE}/tasks/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        completed: !task.completed
+                    })
+                });
+                
+                console.log('📨 Resposta da API:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro ${response.status}: ${errorText}`);
+                }
+                
+                const updatedTask = await response.json();
+                console.log('✅ Tarefa atualizada:', updatedTask);
+                
+                // Recarregar tarefas
+                loadTasks();
+                
+            } catch (error) {
+                console.error('❌ Erro ao alternar tarefa:', error);
+                alert('Erro ao atualizar tarefa: ' + error.message);
+            }
+        }
+        
+        // Excluir tarefa na API
+        async function deleteTask(id) {
+            console.log('Tentando excluir tarefa:', id);
+            
+            if (!confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/tasks/' + id, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Erro ao excluir tarefa');
+                
+                console.log('Tarefa excluída com sucesso');
+                
+                // Recarregar tarefas
+                loadTasks();
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao excluir tarefa.');
+            }
+        }
+        
+        // DEBUG: Verificar se o botão está funcionando
+        document.getElementById('add-task-btn').addEventListener('click', function() {
+            console.log('Botão Adicionar Tarefa clicado!');
+            addTask();
+        });
+        
+        // Inicializar aplicação
+        console.log('Inicializando TaskFlow...');
+        loadTasks();
+    </script>
+</body>
+</html>
