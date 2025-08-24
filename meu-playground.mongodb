@@ -1,0 +1,49 @@
+// Use database
+use('taskmanager');
+
+// 1. Testar conexão com o banco
+db.getCollectionNames();
+
+// 2. Criar collection de tarefas se não existir
+if (!db.getCollectionNames().includes('tasks')) {
+  db.createCollection('tasks');
+  print('Collection "tasks" criada com sucesso!');
+} else {
+  print('Collection "tasks" já existe.');
+}
+
+// 3. Inserir algumas tarefas de exemplo
+db.tasks.insertMany([
+  {
+    title: "Estudar para prova de matemática",
+    description: "Revisar capítulos 5 e 6 do livro",
+    category: "academic",
+    period: "weekly",
+    dueDate: new Date("2023-12-15"),
+    completed: false,
+    createdAt: new Date()
+  },
+  {
+    title: "Fazer compras do mês",
+    description: "Comprar itens de higiene e limpeza",
+    category: "personal",
+    period: "monthly",
+    dueDate: new Date("2023-12-10"),
+    completed: false,
+    createdAt: new Date()
+  },
+  {
+    title: "Reunião com grupo de trabalho",
+    description: "Discutir divisão de tarefas do projeto",
+    category: "academic",
+    period: "daily",
+    dueDate: new Date("2023-12-05"),
+    completed: true,
+    createdAt: new Date()
+  }
+]);
+print('Tarefas de exemplo inseridas!');
+
+// 4. Consultar todas as tarefas
+print("=== TODAS AS TAREFAS ===");
+db.tasks.find().forEach(printjson);
